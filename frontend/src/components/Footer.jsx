@@ -21,31 +21,8 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Column 2: Architecture & Technology */}
-          <div>
-            <h4 style={{ fontSize: '0.8125rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.85rem' }}>
-              Technology Stack
-            </h4>
-            <ul style={{ listStyle: 'none', fontSize: '0.8125rem', color: 'var(--text-main)', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Code2 size={13} color="var(--accent-primary)" /> Backend: Django 6 + Django REST Framework
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Code2 size={13} color="var(--accent-primary)" /> Frontend: React 18 + Vite (ESM)
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Code2 size={13} color="var(--accent-primary)" /> AI Engine: NVIDIA Nemotron 3 Ultra (NIM API)
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Code2 size={13} color="var(--accent-primary)" /> Database: SQLite / PostgreSQL Ready
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Code2 size={13} color="var(--accent-primary)" /> Security: Token Auth + CORS + CSRF
-              </li>
-            </ul>
-          </div>
 
-          {/* Column 3: Data Integrity */}
+          
           <div>
             <h4 style={{ fontSize: '0.8125rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '0.85rem' }}>
               Academic Integrity

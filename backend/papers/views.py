@@ -1,3 +1,4 @@
+import logging
 from rest_framework import status, permissions, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -9,6 +10,8 @@ from .serializers import (
     CollectionSerializer, CollectionItemSerializer, ReadingHistorySerializer
 )
 from .services import ArxivService, AcademicSummarizationEngine
+
+logger = logging.getLogger(__name__)
 
 def get_or_create_paper_from_arxiv(arxiv_id: str) -> Paper:
     """Helper to fetch from arXiv and persist locally if not already present."""
@@ -22,27 +25,31 @@ def get_or_create_paper_from_arxiv(arxiv_id: str) -> Paper:
     if not data:
         return None
 
-    paper = Paper.objects.create(
-        arxiv_id=data['arxiv_id'],
-        title=data['title'],
-        abstract=data['abstract'],
-        category=data['category'],
-        published_date=data['published_date'],
-        updated_date=data['updated_date'],
-        journal_ref=data['journal_ref'],
-        doi=data['doi'],
-        pdf_url=data['pdf_url'],
-    )
-
-    # Attach authors
-    for author_info in data['authors']:
-        author_obj, _ = Author.objects.get_or_create(
-            name=author_info['name'],
-            defaults={'affiliation': author_info.get('affiliation', '')}
+    try:
+        paper, created = Paper.objects.get_or_create(
+            arxiv_id=data['arxiv_id'],
+            defaults={
+                'title': data['title'],
+                'abstract': data['abstract'],
+                'category': data['category'],
+                'published_date': data['published_date'],
+                'updated_date': data['updated_date'],
+                'journal_ref': data['journal_ref'],
+                'doi': data['doi'],
+                'pdf_url': data['pdf_url'],
+            }
         )
-        paper.authors.add(author_obj)
-
-    return paper
+        if created:
+            for author_info in data['authors']:
+                author_obj, _ = Author.objects.get_or_create(
+                    name=author_info['name'],
+                    defaults={'affiliation': author_info.get('affiliation', '')}
+                )
+                paper.authors.add(author_obj)
+        return paper
+    except Exception as e:
+        logger.error(f"Error persisting paper {clean_id}: {e}")
+        return Paper.objects.filter(arxiv_id=clean_id).first()
 
 
 class PaperSearchView(APIView):
@@ -143,12 +150,15 @@ class PaperDetailView(APIView):
                     }
                 }, status=status.HTTP_404_NOT_FOUND)
 
-        # Record view in reading history if authenticated
+        # Record view in reading history if authenticated (non-blocking)
         if request.user.is_authenticated:
-            ReadingHistory.objects.update_or_create(
-                user=request.user,
-                paper=paper
-            )
+            try:
+                ReadingHistory.objects.update_or_create(
+                    user=request.user,
+                    paper=paper
+                )
+            except Exception as e:
+                logger.warning(f"Could not record reading history for {paper.arxiv_id}: {e}")
 
         serializer = PaperDetailSerializer(paper, context={'request': request})
         return Response({

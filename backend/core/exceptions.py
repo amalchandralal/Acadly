@@ -6,6 +6,7 @@ Standardizes error response structures across the API.
 from rest_framework.views import exception_handler
 from rest_framework.response import Response
 from rest_framework import status
+from django.conf import settings
 import logging
 
 logger = logging.getLogger(__name__)
@@ -49,13 +50,15 @@ def custom_exception_handler(exc, context):
 
     # Handle unhandled server exceptions (500)
     logger.exception(f"Unhandled exception in API context: {context}")
+    is_staff = bool(context.get('request') and getattr(context['request'].user, 'is_staff', False))
+    show_details = getattr(settings, 'DEBUG', False) or is_staff
     return Response(
         {
             'success': False,
             'error': {
                 'status_code': status.HTTP_500_INTERNAL_SERVER_ERROR,
                 'message': 'An unexpected internal server error occurred.',
-                'details': str(exc) if context.get('request') and context['request'].user.is_staff else None
+                'details': str(exc) if show_details else None
             }
         },
         status=status.HTTP_500_INTERNAL_SERVER_ERROR

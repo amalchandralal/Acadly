@@ -44,6 +44,21 @@ apiClient.interceptors.response.use(
         } else if (typeof error.response.data === 'string') {
           friendlyMessage = error.response.data;
         }
+
+        // If details contains field validation errors, extract the specific field message
+        if (details && typeof details === 'object' && !Array.isArray(details)) {
+          const keys = Object.keys(details);
+          if (keys.length > 0) {
+            const firstKey = keys[0];
+            const firstVal = details[firstKey];
+            const fieldLabel = (firstKey === 'non_field_errors' || firstKey === 'detail') ? '' : `${firstKey.replace('_', ' ')}: `;
+            if (Array.isArray(firstVal) && firstVal.length > 0) {
+              friendlyMessage = `${fieldLabel}${firstVal[0]}`;
+            } else if (typeof firstVal === 'string') {
+              friendlyMessage = `${fieldLabel}${firstVal}`;
+            }
+          }
+        }
       }
     } else if (error.request) {
       friendlyMessage = 'Could not connect to the backend server. Please verify the Django service is running.';

@@ -4,6 +4,19 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, UpdateProfileSerializer
 
+def format_serializer_errors(errors):
+    """Extracts a clear, human-readable string from serializer errors."""
+    if isinstance(errors, dict):
+        for field, messages in errors.items():
+            if isinstance(messages, list) and messages:
+                field_name = field.replace('_', ' ').capitalize()
+                return f"{messages[0]}" if field in ['non_field_errors', 'detail'] else f"{field_name}: {messages[0]}"
+            elif isinstance(messages, str):
+                return messages
+    elif isinstance(errors, list) and errors:
+        return str(errors[0])
+    return "Please check the provided data."
+
 class RegisterView(APIView):
     """
     Register a new user account. Returns authentication token and user profile.
@@ -26,7 +39,7 @@ class RegisterView(APIView):
             'success': False,
             'error': {
                 'status_code': status.HTTP_400_BAD_REQUEST,
-                'message': 'Registration failed. Please check the provided data.',
+                'message': format_serializer_errors(serializer.errors),
                 'details': serializer.errors
             }
         }, status=status.HTTP_400_BAD_REQUEST)
@@ -53,7 +66,7 @@ class LoginView(APIView):
             'success': False,
             'error': {
                 'status_code': status.HTTP_400_BAD_REQUEST,
-                'message': 'Login failed.',
+                'message': format_serializer_errors(serializer.errors),
                 'details': serializer.errors
             }
         }, status=status.HTTP_400_BAD_REQUEST)
@@ -108,7 +121,7 @@ class CurrentUserView(APIView):
             'success': False,
             'error': {
                 'status_code': status.HTTP_400_BAD_REQUEST,
-                'message': 'Profile update failed.',
+                'message': format_serializer_errors(serializer.errors),
                 'details': serializer.errors
             }
         }, status=status.HTTP_400_BAD_REQUEST)
