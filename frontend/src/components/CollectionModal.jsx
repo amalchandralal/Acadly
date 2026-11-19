@@ -21,15 +21,19 @@ export default function CollectionModal({ paper, isOpen, onClose, onSuccess }) {
   const loadCollections = async () => {
     try {
       const data = await collectionsAPI.listCollections();
-      setCollections(data);
-      if (data.length > 0) {
-        setSelectedCollectionId(data[0].id);
+      const list = Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : []);
+      setCollections(list);
+      if (list.length > 0) {
+        setSelectedCollectionId(list[0].id);
+        setIsCreatingNew(false);
       } else {
         setIsCreatingNew(true);
       }
     } catch (err) {
       console.error(err);
       setError('Could not load your collections.');
+      setCollections([]);
+      setIsCreatingNew(true);
     }
   };
 
@@ -112,16 +116,18 @@ export default function CollectionModal({ paper, isOpen, onClose, onSuccess }) {
           <div className="form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
               <label className="form-label" style={{ marginBottom: 0 }}>Target Collection</label>
-              <button
-                type="button"
-                onClick={() => setIsCreatingNew(!isCreatingNew)}
-                style={{ background: 'none', border: 'none', fontSize: '0.75rem', color: 'var(--accent-primary)', cursor: 'pointer', fontWeight: 600 }}
-              >
-                {isCreatingNew ? 'Choose existing collection' : '+ Create new collection'}
-              </button>
+              {collections.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setIsCreatingNew(!isCreatingNew)}
+                  style={{ background: 'none', border: 'none', fontSize: '0.75rem', color: 'var(--accent-primary)', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  {isCreatingNew ? 'Choose existing collection' : '+ Create new collection'}
+                </button>
+              )}
             </div>
 
-            {isCreatingNew ? (
+            {isCreatingNew || collections.length === 0 ? (
               <input
                 type="text"
                 className="form-input"
@@ -138,7 +144,7 @@ export default function CollectionModal({ paper, isOpen, onClose, onSuccess }) {
                 onChange={(e) => setSelectedCollectionId(e.target.value)}
                 required
               >
-                {collections.map((col) => (
+                {Array.isArray(collections) && collections.map((col) => (
                   <option key={col.id} value={col.id}>
                     {col.name} ({col.items_count || 0} papers)
                   </option>

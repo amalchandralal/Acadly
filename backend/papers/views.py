@@ -271,6 +271,7 @@ class CollectionListCreateView(generics.ListCreateAPIView):
     """
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = CollectionSerializer
+    pagination_class = None
 
     def get_queryset(self):
         return Collection.objects.filter(user=self.request.user)

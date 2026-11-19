@@ -23,8 +23,10 @@ class ArxivService:
         """Sanitizes arXiv ID (e.g. 'arxiv:2301.00234v1' or '2301.00234v2' -> '2301.00234')."""
         raw_id = raw_id.strip()
         raw_id = re.sub(r'^(?:arxiv:\s*|https?://arxiv\.org/(?:abs|pdf)/)', '', raw_id, flags=re.IGNORECASE)
-        # Strip trailing .pdf or version tag if desired
+        # Strip trailing .pdf
         raw_id = re.sub(r'\.pdf$', '', raw_id, flags=re.IGNORECASE)
+        # Strip version suffix (e.g. v1, v2) for consistent storage
+        raw_id = re.sub(r'v\d+$', '', raw_id)
         return raw_id
 
     @classmethod
@@ -95,6 +97,8 @@ class ArxivService:
             full_id = id_elem.text.strip()
             # Extract ID portion: http://arxiv.org/abs/2301.00234v1 -> 2301.00234
             arxiv_id = full_id.split('/abs/')[-1] if '/abs/' in full_id else full_id
+            # Strip version suffix for consistent storage
+            arxiv_id = re.sub(r'v\d+$', '', arxiv_id)
 
             title_elem = entry.find('atom:title', ATOM_NS)
             title = re.sub(r'\s+', ' ', title_elem.text.strip()) if title_elem is not None and title_elem.text else 'Untitled'

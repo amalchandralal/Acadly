@@ -82,7 +82,7 @@ export default function CollectionDetailPage() {
     );
   }
 
-  const items = collection.items || [];
+  const items = Array.isArray(collection?.items) ? collection.items : [];
   const filteredItems = filterStatus === 'all'
     ? items
     : items.filter(item => item.reading_status === filterStatus);
@@ -152,7 +152,7 @@ export default function CollectionDetailPage() {
         </div>
 
         {/* Papers in Collection */}
-        {filteredItems.length > 0 ? (
+        {Array.isArray(filteredItems) && filteredItems.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {filteredItems.map((item) => {
               const paper = item.paper;

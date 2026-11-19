@@ -31,10 +31,12 @@ export default function CollectionsPage() {
     setLoading(true);
     try {
       const data = await collectionsAPI.listCollections();
-      setCollections(data);
+      const list = Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : []);
+      setCollections(list);
     } catch (err) {
       console.error(err);
       setError('Could not load research collections.');
+      setCollections([]);
     } finally {
       setLoading(false);
     }
@@ -52,7 +54,7 @@ export default function CollectionsPage() {
         description: newColDesc.trim(),
         is_public: newColPublic,
       });
-      setCollections([created, ...collections]);
+      setCollections(prev => [created, ...(Array.isArray(prev) ? prev : [])]);
       setShowCreateModal(false);
       setNewColName('');
       setNewColDesc('');
@@ -68,7 +70,7 @@ export default function CollectionsPage() {
     if (window.confirm(`Are you sure you want to delete collection "${name}"?`)) {
       try {
         await collectionsAPI.deleteCollection(id);
-        setCollections(collections.filter(c => c.id !== id));
+        setCollections(prev => (Array.isArray(prev) ? prev.filter(c => c.id !== id) : []));
       } catch (err) {
         alert('Could not delete collection.');
       }
@@ -114,7 +116,7 @@ export default function CollectionsPage() {
         )}
 
         {/* Collections Grid */}
-        {collections.length > 0 ? (
+        {Array.isArray(collections) && collections.length > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
             {collections.map((col) => (
               <div key={col.id} className="academic-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>

@@ -197,7 +197,7 @@ export default function DashboardPage() {
 
             {loadingHistory ? (
               <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading recent activity...</p>
-            ) : history.length > 0 ? (
+            ) : Array.isArray(history) && history.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {history.map((record) => (
                   <div

@@ -18,7 +18,7 @@ class SummarySerializer(serializers.ModelSerializer):
 class PaperListSerializer(serializers.ModelSerializer):
     authors = AuthorSerializer(many=True, read_only=True)
     has_summary = serializers.SerializerMethodField()
-    vote_score = serializers.IntegerField(read_only=True)
+    vote_score = serializers.SerializerMethodField()
 
     class Meta:
         model = Paper
@@ -30,10 +30,13 @@ class PaperListSerializer(serializers.ModelSerializer):
     def get_has_summary(self, obj):
         return hasattr(obj, 'summary')
 
+    def get_vote_score(self, obj):
+        return obj.vote_score
+
 class PaperDetailSerializer(serializers.ModelSerializer):
     authors = AuthorSerializer(many=True, read_only=True)
     summary = SummarySerializer(read_only=True)
-    vote_score = serializers.IntegerField(read_only=True)
+    vote_score = serializers.SerializerMethodField()
     user_vote = serializers.SerializerMethodField()
     bibtex = serializers.SerializerMethodField()
 
@@ -52,6 +55,9 @@ class PaperDetailSerializer(serializers.ModelSerializer):
             vote = obj.votes.filter(user=request.user).first()
             return vote.value if vote else 0
         return 0
+
+    def get_vote_score(self, obj):
+        return obj.vote_score
 
     def get_bibtex(self, obj):
         author_names = " and ".join([a.name for a in obj.authors.all()]) or "Unknown Author"
