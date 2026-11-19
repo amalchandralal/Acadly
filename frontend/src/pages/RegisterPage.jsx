@@ -77,72 +77,83 @@ export default function RegisterPage() {
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group">
-              <label className="form-label">First Name</label>
+              <label htmlFor="reg-first-name" className="form-label">First Name</label>
               <input
+                id="reg-first-name"
                 type="text"
                 name="first_name"
                 className="form-input"
                 placeholder="Alex"
                 value={formData.first_name}
                 onChange={handleChange}
+                autoComplete="given-name"
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Last Name</label>
+              <label htmlFor="reg-last-name" className="form-label">Last Name</label>
               <input
+                id="reg-last-name"
                 type="text"
                 name="last_name"
                 className="form-input"
                 placeholder="Rivera"
                 value={formData.last_name}
                 onChange={handleChange}
+                autoComplete="family-name"
               />
             </div>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Username *</label>
+            <label htmlFor="reg-username" className="form-label">Username *</label>
             <input
+              id="reg-username"
               type="text"
               name="username"
               className="form-input"
               placeholder="arivera"
               value={formData.username}
               onChange={handleChange}
+              autoComplete="username"
               required
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Email Address *</label>
+            <label htmlFor="reg-email" className="form-label">Email Address *</label>
             <input
+              id="reg-email"
               type="email"
               name="email"
               className="form-input"
               placeholder="alex.rivera@university.edu"
               value={formData.email}
               onChange={handleChange}
+              autoComplete="email"
               required
             />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group">
-              <label className="form-label">Institution / University</label>
+              <label htmlFor="reg-institution" className="form-label">Institution / University</label>
               <input
+                id="reg-institution"
                 type="text"
                 name="institution"
                 className="form-input"
                 placeholder="Stanford / MIT"
                 value={formData.institution}
                 onChange={handleChange}
+                autoComplete="organization"
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Field of Study</label>
+              <label htmlFor="reg-field-of-study" className="form-label">Field of Study</label>
               <input
+                id="reg-field-of-study"
                 type="text"
                 name="field_of_study"
                 className="form-input"
@@ -155,27 +166,31 @@ export default function RegisterPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group">
-              <label className="form-label">Password *</label>
+              <label htmlFor="reg-password" className="form-label">Password *</label>
               <input
+                id="reg-password"
                 type="password"
                 name="password"
                 className="form-input"
                 placeholder="••••••••••••"
                 value={formData.password}
                 onChange={handleChange}
+                autoComplete="new-password"
                 required
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Confirm Password *</label>
+              <label htmlFor="reg-password-confirm" className="form-label">Confirm Password *</label>
               <input
+                id="reg-password-confirm"
                 type="password"
                 name="password_confirm"
                 className="form-input"
                 placeholder="••••••••••••"
                 value={formData.password_confirm}
                 onChange={handleChange}
+                autoComplete="new-password"
                 required
               />
             </div>

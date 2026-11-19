@@ -64,26 +64,32 @@ export default function LoginPage() {
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Username</label>
+            <label htmlFor="login-username" className="form-label">Username</label>
             <input
+              id="login-username"
+              name="username"
               type="text"
               className="form-input"
               placeholder="e.g. researcher"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
               autoFocus
               required
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Password</label>
+            <label htmlFor="login-password" className="form-label">Password</label>
             <input
+              id="login-password"
+              name="password"
               type="password"
               className="form-input"
               placeholder="••••••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
               required
             />
           </div>
