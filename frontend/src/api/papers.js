@@ -24,6 +24,10 @@ export const papersAPI = {
     return apiClient.get(`/papers/${arxivId}/bibtex/`);
   },
 
+  askQuestion: async (arxivId, question) => {
+    return apiClient.post(`/papers/${arxivId}/ask/`, { question });
+  },
+
   getReadingHistory: async () => {
     return apiClient.get('/history/');
   },

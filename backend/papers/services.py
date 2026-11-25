@@ -383,3 +383,129 @@ Return ONLY a valid JSON object matching this schema without any markdown format
             'generator_type': 'NLP_ENGINE'
         }
 
+    @classmethod
+    def answer_question(cls, paper, question: str) -> dict:
+        """
+        Answers a researcher question about a specific paper using
+        NVIDIA Nemotron 3 Ultra (if configured) with deterministic NLP fallback.
+        """
+        api_key = getattr(settings, 'NVIDIA_API_KEY', '') or getattr(settings, 'OPENAI_API_KEY', '') or ''
+        clean_q = question.strip()
+
+        if api_key.strip():
+            llm_ans = cls._try_nemotron_answer(paper, clean_q, api_key.strip())
+            if llm_ans:
+                return {'answer': llm_ans, 'source': 'NEMOTRON_LLM'}
+
+        nlp_ans = cls._generate_nlp_answer(paper, clean_q)
+        return {'answer': nlp_ans, 'source': 'NLP_ENGINE'}
+
+    @classmethod
+    def _try_nemotron_answer(cls, paper, question: str, api_key: str) -> str:
+        try:
+            base_url = getattr(settings, 'NVIDIA_BASE_URL', 'https://integrate.api.nvidia.com/v1').rstrip('/')
+            model_name = getattr(settings, 'NVIDIA_MODEL', 'nvidia/nemotron-3-ultra')
+            endpoint = f"{base_url}/chat/completions"
+            headers = {
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json'
+            }
+            summary_ctx = ""
+            if hasattr(paper, 'summary') and paper.summary:
+                summary_ctx = (
+                    f"Executive Summary: {paper.summary.executive_summary}\n"
+                    f"Key Findings: {'; '.join(paper.summary.key_findings)}\n"
+                    f"Methodology: {paper.summary.methodology}\n"
+                    f"Limitations: {paper.summary.limitations}\n"
+                )
+
+            prompt = f"""You are an expert AI research assistant analyzing the scientific paper "{paper.title}" (arXiv:{paper.arxiv_id}, Category: {paper.category}).
+
+Abstract:
+{paper.abstract}
+
+{summary_ctx}
+
+Question from researcher:
+{question}
+
+Provide an accurate, concise, academic answer (1-3 paragraphs) answering the question based strictly on the paper contents and findings above."""
+
+            payload = {
+                "model": model_name,
+                "messages": [
+                    {"role": "system", "content": "You are a concise, factual academic research assistant. Answer questions directly using the provided paper context."},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.2,
+                "max_tokens": 600
+            }
+            res = requests.post(endpoint, headers=headers, json=payload, timeout=20)
+            if res.status_code == 200:
+                data = res.json()
+                return data['choices'][0]['message']['content'].strip()
+        except Exception as e:
+            logger.warning(f"Nemotron Q&A call failed: {e}. Falling back to NLP answer generator.")
+        return None
+
+    @classmethod
+    def _generate_nlp_answer(cls, paper, question: str) -> str:
+        """
+        Deterministic, rule-guided extractive answer generator.
+        Matches question intent and keywords against paper abstract and synthesis.
+        """
+        q_lower = question.lower()
+        abstract = paper.abstract or ""
+        sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', abstract) if len(s.strip()) > 10]
+
+        # 1. Dataset / Evaluation / Benchmark Intent
+        if any(w in q_lower for w in ['dataset', 'data', 'benchmark', 'corpus', 'metric', 'evaluation', 'tested', 'test']):
+            matches = [s for s in sentences if any(w in s.lower() for w in ['task', 'dataset', 'wmt', 'bleu', 'imagenet', 'evaluated', 'benchmark', 'experiment', 'metric', 'accuracy', 'results'])]
+            if matches:
+                return f"Based on the paper's experimental setup: {' '.join(matches[:2])}"
+            if hasattr(paper, 'summary') and paper.summary and paper.summary.key_findings:
+                return f"Regarding evaluation and metrics: {' '.join(paper.summary.key_findings[:2])}"
+
+        # 2. Methodology / Architecture / Mechanism Intent
+        if any(w in q_lower for w in ['how', 'method', 'architecture', 'pipeline', 'algorithm', 'work', 'formula', 'mechanism', 'model']):
+            if hasattr(paper, 'summary') and paper.summary and paper.summary.methodology:
+                return f"Methodological formulation: {paper.summary.methodology}"
+            matches = [s for s in sentences if any(w in s.lower() for w in ['propose', 'introduce', 'architecture', 'model', 'network', 'based', 'mechanism'])]
+            if matches:
+                return f"Core architectural approach: {' '.join(matches[:2])}"
+
+        # 3. Limitations / Constraints / Challenges Intent
+        if any(w in q_lower for w in ['limit', 'weakness', 'challenge', 'constraint', 'drawback', 'future', 'flaw', 'risk']):
+            if hasattr(paper, 'summary') and paper.summary and paper.summary.limitations:
+                return f"Identified scientific limitations: {paper.summary.limitations}"
+            matches = [s for s in sentences if any(w in s.lower() for w in ['however', 'limit', 'cost', 'computation', 'although'])]
+            if matches:
+                return f"Noted constraints: {' '.join(matches[:2])}"
+
+        # 4. Core breakthrough / summary / beginner explanation
+        if any(w in q_lower for w in ['breakthrough', 'simple', 'beginner', 'layman', 'summary', 'about', 'main point', 'contribution', 'why']):
+            if hasattr(paper, 'summary') and paper.summary and paper.summary.lay_summary:
+                return paper.summary.lay_summary
+            if hasattr(paper, 'summary') and paper.summary and paper.summary.executive_summary:
+                return paper.summary.executive_summary
+
+        # 5. General keyword matching
+        stop_words = {'what', 'when', 'where', 'which', 'who', 'whom', 'this', 'that', 'with', 'from', 'have', 'does', 'about', 'paper'}
+        q_words = set(re.findall(r'\b[a-zA-Z]{3,}\b', q_lower)) - stop_words
+        if q_words:
+            scored_sentences = []
+            for s in sentences:
+                s_words = set(re.findall(r'\b[a-zA-Z]{3,}\b', s.lower()))
+                overlap = len(q_words & s_words)
+                if overlap > 0:
+                    scored_sentences.append((overlap, s))
+            scored_sentences.sort(key=lambda x: x[0], reverse=True)
+            if scored_sentences:
+                return " ".join([item[1] for item in scored_sentences[:2]])
+
+        # Default fallback
+        if hasattr(paper, 'summary') and paper.summary and paper.summary.executive_summary:
+            return f"From the paper's synthesis: {paper.summary.executive_summary}"
+        return f"Regarding '{paper.title}', the authors address research challenges in {paper.category or 'the target domain'}: {sentences[0] if sentences else abstract[:200]}"
+
+

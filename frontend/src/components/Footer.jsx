@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, ExternalLink, ShieldCheck, Code2 } from 'lucide-react';
+import { BookOpen, ShieldCheck } from 'lucide-react';
 
 export default function Footer() {
   return (

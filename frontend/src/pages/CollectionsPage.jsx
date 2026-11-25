@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { collectionsAPI } from '../api/collections';
 import { useAuth } from '../context/AuthContext';
-import { Bookmark, Plus, Trash2, ArrowRight, BookOpen, Lock, Globe } from 'lucide-react';
+import { Bookmark, Plus, Trash2, ArrowRight, Lock, Globe } from 'lucide-react';
 
 export default function CollectionsPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();

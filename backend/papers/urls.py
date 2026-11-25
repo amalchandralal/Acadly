@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     PaperSearchView, PaperDetailView, PaperSummarizeView,
-    PaperVoteView, PaperBibtexView, CollectionListCreateView,
+    PaperVoteView, PaperBibtexView, PaperAskView, CollectionListCreateView,
     CollectionDetailView, CollectionItemManageView, UserHistoryListView
 )
 
@@ -12,6 +12,7 @@ urlpatterns = [
     path('papers/<str:arxiv_id>/summarize/', PaperSummarizeView.as_view(), name='paper_summarize'),
     path('papers/<str:arxiv_id>/vote/', PaperVoteView.as_view(), name='paper_vote'),
     path('papers/<str:arxiv_id>/bibtex/', PaperBibtexView.as_view(), name='paper_bibtex'),
+    path('papers/<str:arxiv_id>/ask/', PaperAskView.as_view(), name='paper_ask'),
 
     # Collections
     path('collections/', CollectionListCreateView.as_view(), name='collection_list_create'),

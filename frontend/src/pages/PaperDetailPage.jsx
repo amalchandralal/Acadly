@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { papersAPI } from '../api/papers';
 import SummaryViewer from '../components/SummaryViewer';
 import CollectionModal from '../components/CollectionModal';
+import AskPaperSection from '../components/AskPaperSection';
+import KnowledgeGraph from '../components/KnowledgeGraph';
 import { useAuth } from '../context/AuthContext';
 import {
   FileText, Calendar, Users, ExternalLink, ThumbsUp, ThumbsDown,
@@ -304,8 +306,15 @@ export default function PaperDetailPage() {
             summary={paper.summary}
             bibtex={paper.bibtex}
             paperTitle={paper.title}
+            paper={paper}
           />
         </div>
+
+        {/* Feature 2: Interactive AI Assistant / Ask the Paper */}
+        <AskPaperSection paper={paper} />
+
+        {/* Feature 3: Interactive Citation & Co-Author Knowledge Graph */}
+        <KnowledgeGraph paper={paper} />
 
       </div>
 

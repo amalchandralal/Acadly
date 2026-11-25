@@ -275,6 +275,41 @@ class PaperBibtexView(APIView):
         })
 
 
+class PaperAskView(APIView):
+    """
+    Interactive Q&A: Inquire specific details about an academic preprint.
+    Uses NVIDIA Nemotron 3 Ultra (if configured) with deterministic NLP fallback.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, arxiv_id):
+        clean_id = ArxivService.clean_id(arxiv_id)
+        paper = Paper.objects.filter(arxiv_id=clean_id).first()
+        if not paper:
+            paper = get_or_create_paper_from_arxiv(clean_id)
+            if not paper:
+                return Response({
+                    'success': False,
+                    'error': {'status_code': 404, 'message': 'Paper not found.'}
+                }, status=status.HTTP_404_NOT_FOUND)
+
+        question = request.data.get('question', '').strip()
+        if not question:
+            return Response({
+                'success': False,
+                'error': {'status_code': 400, 'message': 'Question is required.'}
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        answer_data = AcademicSummarizationEngine.answer_question(paper, question)
+        return Response({
+            'success': True,
+            'arxiv_id': clean_id,
+            'question': question,
+            'answer': answer_data.get('answer', ''),
+            'source': answer_data.get('source', 'NLP_ENGINE'),
+        })
+
+
 class CollectionListCreateView(generics.ListCreateAPIView):
     """
     List user collections or create a new collection.
